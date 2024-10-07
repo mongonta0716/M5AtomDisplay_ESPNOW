@@ -16,8 +16,8 @@ const esp_now_peer_info_t *peer = &esp_ap;
 
 uint8_t send_data[250]; // ESP-NOWの送信バッファ(250Byteまで)
 uint32_t recv_count = 0;
-#define WIFI_DEFAULT_CHANNEL 1
-#define WIFI_SECONDORY_CHANNEL 2
+#define WIFI_DEFAULT_CHANNEL 7
+#define WIFI_SECONDORY_CHANNEL 8
 
 // コールバック関数実行時に排他制御をする。
 SemaphoreHandle_t xMutex = NULL;
@@ -36,17 +36,20 @@ void onRecvData(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
         mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
   
 
-    char buf[250];
+    char buf[250] = {0};
     memcpy(&buf, data, data_len);
     // gfx.printf("Recv:%s", macStr);
-    Serial.printf("%s\n", buf);
-    for (int i = display.width(); i > -display.textWidth(buf); --i) {
-      display.startWrite();
-      display.drawString(buf, i, (display.height() - display.fontHeight()) >> 1);
+    //Serial.printf("%s\n", buf);
+    //for (int i = display.width(); i > -display.textWidth(buf); --i) {
+    display.startWrite();
+    display.clear(TFT_BLACK);
+    display.setCursor(0, 0);
+    display.print(buf);
+      //display.drawString(buf, i, (display.height() - display.fontHeight()) >> 1);
       //display.printf("recv:%d:%s\n",recv_count,buf);
-      display.endWrite();
-      vTaskDelay(10/portTICK_RATE_MS); // スクロールするときにWaitしないとハングアップするので必要に応じて調整が必要 
-    }
+    display.endWrite();
+    vTaskDelay(10/portTICK_RATE_MS); // スクロールするときにWaitしないとハングアップするので必要に応じて調整が必要 
+    //}
   }
   xSemaphoreGive(xMutex);
 }
@@ -70,7 +73,7 @@ void onSentData(const uint8_t *mac_addr, esp_now_send_status_t status) {
 void setup() {
   display.init();
   delay(5000);
-  display.setFont(&fonts::lgfxJapanGothic_40);
+  display.setFont(&fonts::lgfxJapanGothic_20);
   uint8_t mac_addr[6];
   esp_read_mac(mac_addr, ESP_MAC_WIFI_STA);
   //display.printf("%02X:%02X:%02X:%02X:%02X:%02X", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
